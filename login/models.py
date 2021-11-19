@@ -1,7 +1,6 @@
 from django.db import models
 
-from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import JSONField  
+from django.contrib.auth.models import AbstractUser 
 
 # Create your models here.
 class User(AbstractUser):
@@ -10,4 +9,5 @@ class User(AbstractUser):
     address = models.CharField(max_length=255, default='')
     #groups = models.ManyToManyField(Group, through='UserGroup')
     totp_phrase = models.CharField(max_length=255, default='')
-    json = JSONField(default=list)
+    is_admin = models.BooleanField(default=False)
+    is_super = models.BooleanField(default=False)

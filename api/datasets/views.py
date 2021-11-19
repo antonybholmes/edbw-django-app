@@ -1,0 +1,65 @@
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.core import serializers
+from django.core.paginator import Paginator
+from django.contrib.auth.models import Group
+from api.datasets.serializers import GroupSerializer
+from api import auth, views
+from edbw import settings
+import libhttp
+
+
+def _callback(key, person, user_type, id_map={}):
+    #serializer = GroupSerializer(Group.objects.all(), many=True, read_only=True)
+    #return JsonResponse(serializer.data, safe=False)
+    
+    #print([x['json'] for x in GroupJson.objects.all().values('json')])
+    
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = 1
+    
+    records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
+    
+    rows = Group.objects.all() #.values('json')
+    
+    paginator = Paginator(rows, records)
+    
+    page_rows = paginator.get_page(1)
+    
+    data = []
+    
+    for g in page_rows:
+        data.append({'id':g.id, 'n':g.name, 'c':'#000000'})
+    
+    if 'page' in id_map:
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'groups':data, 'size':len(data)}, safe=False) #views.json_page_resp('groups', page, paginator) #JsonResponse({'page':page, 'pages':paginator.num_pages, 'groups':[x['json'] for x in page_rows]}, safe=False)
+    else:
+        return JsonResponse(data, safe=False) #views.json_resp(paginator.get_page(1))
+    
+    
+def datasets(request):
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('page', arg_type=int) \
+        .add('records', default_value=settings.DEFAULT_RECORDS) \
+        .parse(request)
+    
+    return auth.auth(request, _callback, id_map=id_map)
+
+
+
+#def samples_callback(key, person, user_type, id_map={}):
+    ##serializer = GroupSerializer(Group.objects.all(), many=True, read_only=True)
+    ##return JsonResponse(serializer.data, safe=False)
+    
+    #return JsonResponse(Group.objects.all().values('json'), safe=False)
+    
+    
+#def samples(request):
+    #id_map = {}
+    
+    #return auth.auth(request, sample_groups_callback, id_map=id_map)
+

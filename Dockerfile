@@ -18,6 +18,9 @@ RUN runDeps="$(scanelf --needed --nobanner --recursive /env \
     && apk add --virtual rundeps $runDeps
 RUN apk del build-deps
 
+# Keep postgres for testing
+RUN apk add postgresql
+
 ADD . .
 
 
